@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the plugintype_pluginname plugin.
+ * This file contains the version information for the autograding submission plugin
  *
  * @package   assignsubmission_autograding
  * @copyright 2022, Dimas 13518069@std.stei.itb.ac.id

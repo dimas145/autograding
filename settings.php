@@ -15,20 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the plugintype_pluginname plugin.
+ * This file defines the admin settings for this plugin
  *
  * @package   assignsubmission_autograding
  * @copyright 2022, Dimas 13518069@std.stei.itb.ac.id
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Programming Assignment Autograding Submission';
-$string['default'] = 'Enabled by default';
-$string['default_help'] = 'If set, this submission method will be enabled by default for all new assignments.';
-$string['enabled'] = 'Autograding submission';
-$string['enabled_help'] = 'If enabled, student will be able to submit via GitLab Merge Request';
-$string['autograding'] = 'Autograding';
-$string['codereference'] = 'Code References';
-$string['bridgeserviceurl'] = 'Bridge Service url';
-$string['bridgeserviceurldefault'] = 'http://bridge-service:8085';
-$string['urltemplate'] = '{$a->url}{$a->endpoint}';
+$settings->add(new admin_setting_configcheckbox(
+    'assignsubmission_autograding/default',
+    new lang_string('default', 'assignsubmission_autograding'),
+    new lang_string('default_help', 'assignsubmission_autograding'),
+    1
+));
+
+$settings->add(new admin_setting_configtext(
+    'assignsubmission_autograding/bridge_service_url',
+    new lang_string('bridgeserviceurl', 'assignsubmission_autograding'),
+    null,
+    new lang_string('bridgeserviceurldefault', 'assignsubmission_autograding'),
+    PARAM_URL,
+));
