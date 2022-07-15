@@ -244,7 +244,7 @@ class assign_submission_autograding extends assign_submission_plugin {
      */
     public function view_summary(stdClass $submission, &$showviewlink) {
         $repo = $this->get_repo($this->assignment->get_instance()->course, $this->assignment->get_instance()->id)->repository;
-        return '<a href="' . $repo->gitlabUrl . '">Gitlab Repository</a>';
+        return '<a href="' . $repo->gitlabUrl . '" target="_blank">Gitlab Repository</a>';
     }
 
     /**
