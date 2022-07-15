@@ -30,5 +30,5 @@ $string['enabled_help'] = 'If enabled, student will be able to submit via GitLab
 $string['autograding'] = 'Autograding';
 $string['codereference'] = 'Code References';
 $string['bridgeserviceurl'] = 'Bridge Service url';
-$string['bridgeserviceurldefault'] = 'http://bridge-service:8085';
+$string['bridgeserviceurldefault'] = 'http://advanced-autograder.my.id:8085';
 $string['urltemplate'] = '{$a->url}{$a->endpoint}';
