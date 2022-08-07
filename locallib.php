@@ -156,7 +156,8 @@ class assign_submission_autograding extends assign_submission_plugin {
             isset($data->assignsubmission_autograding_gradingPriority) &&
             isset($data->assignsubmission_autograding_timeLimit) &&
             isset($data->assignsubmission_autograding_autograders) &&
-            count($data->assignsubmission_autograding_autograders) > 0
+            count($data->assignsubmission_autograding_autograders) > 0 &&
+            count($data->assignsubmission_autograding_codereference) > 0
         ) { // only valid if all autograding data is set
             $files_data = $DB->get_records('files', array('itemid' => $data->assignsubmission_autograding_codereference));
 
