@@ -39,11 +39,11 @@ class assign_submission_autograding extends assign_submission_plugin {
      * @return stdClass
      */
     public function get_repo(int $courseid, int $assignmentid) {
-        $config = get_config('assignsubmission_autograding');
+        $config = get_config('local_integrate_autograding_system');
         $curl = new curl();
         $url = get_string(
             'urltemplate',
-            'assignsubmission_autograding',
+            'local_integrate_autograding_system',
             [
                 'url' => $config->bridge_service_url,
                 'endpoint' => "/repository/detail?courseId=$courseid&assignmentId=$assignmentid"
@@ -63,7 +63,7 @@ class assign_submission_autograding extends assign_submission_plugin {
      */
     public function get_settings(MoodleQuickForm $mform) {
         global $CFG;
-        $config = get_config('assignsubmission_autograding');
+        $config = get_config('local_integrate_autograding_system');
 
         $mform->addElement(
             'filemanager',
@@ -120,7 +120,7 @@ class assign_submission_autograding extends assign_submission_plugin {
         $curl = new curl();
         $url = get_string(
             'urltemplate',
-            'assignsubmission_autograding',
+            'local_integrate_autograding_system',
             [
                 'url' => $config->bridge_service_url,
                 'endpoint' => '/autograder/running'
@@ -152,7 +152,7 @@ class assign_submission_autograding extends assign_submission_plugin {
      * @return bool
      */
     public function save_settings(stdClass $data) {
-        $config = get_config('assignsubmission_autograding');
+        $config = get_config('local_integrate_autograding_system');
         global $DB;
 
         $files_data = $DB->get_records('files', array('itemid' => $data->assignsubmission_autograding_codereference));
@@ -163,7 +163,7 @@ class assign_submission_autograding extends assign_submission_plugin {
 
         $url = get_string(
             'urltemplate',
-            'assignsubmission_autograding',
+            'local_integrate_autograding_system',
             [
                 'url' => $config->bridge_service_url,
                 'endpoint' => '/gitlab/createRepository'
@@ -202,7 +202,7 @@ class assign_submission_autograding extends assign_submission_plugin {
 
                     $url = get_string(
                         'urltemplate',
-                        'assignsubmission_autograding',
+                        'local_integrate_autograding_system',
                         [
                             'url' => $config->bridge_service_url,
                             'endpoint' => '/moodle/saveReference'

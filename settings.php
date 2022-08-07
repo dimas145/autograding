@@ -28,11 +28,3 @@ $settings->add(new admin_setting_configcheckbox(
     new lang_string('default_help', 'assignsubmission_autograding'),
     1
 ));
-
-$settings->add(new admin_setting_configtext(
-    'assignsubmission_autograding/bridge_service_url',
-    new lang_string('bridgeserviceurl', 'assignsubmission_autograding'),
-    null,
-    new lang_string('bridgeserviceurldefault', 'assignsubmission_autograding'),
-    PARAM_URL,
-));
