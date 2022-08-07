@@ -75,7 +75,6 @@ class assign_submission_autograding extends assign_submission_plugin {
                 'accepted_types' => '*', 'return_types' => FILE_INTERNAL | FILE_EXTERNAL
             )
         );
-        $mform->addRule('assignsubmission_autograding_codereference', get_string('required'), 'required');
         $mform->hideIf(
             'assignsubmission_autograding_codereference',
             'assignsubmission_autograding_enabled',
@@ -88,7 +87,6 @@ class assign_submission_autograding extends assign_submission_plugin {
         $grading_methods['AVERAGE'] = 'Average';
         $mform->addElement('select', 'assignsubmission_autograding_gradingMethod', 'Grading Method', $grading_methods);
         $mform->setDefault('assignsubmission_autograding_gradingMethod', 'MAXIMUM');
-        $mform->addRule('assignsubmission_autograding_gradingMethod', get_string('required'), 'required');
         $mform->hideIf(
             'assignsubmission_autograding_gradingMethod',
             'assignsubmission_autograding_enabled',
@@ -100,7 +98,6 @@ class assign_submission_autograding extends assign_submission_plugin {
         $grading_priority['LAST'] = 'Last';
         $mform->addElement('select', 'assignsubmission_autograding_gradingPriority', 'Grading Priority', $grading_priority);
         $mform->setDefault('assignsubmission_autograding_gradingPriority', 'FIRST');
-        $mform->addRule('assignsubmission_autograding_gradingPriority', get_string('required'), 'required');
         $mform->hideIf(
             'assignsubmission_autograding_gradingPriority',
             'assignsubmission_autograding_enabled',
@@ -110,7 +107,6 @@ class assign_submission_autograding extends assign_submission_plugin {
         $mform->addElement('text', 'assignsubmission_autograding_timeLimit', 'Time Limit');
         $mform->setType('assignsubmission_autograding_timeLimit', PARAM_INT);
         $mform->setDefault('assignsubmission_autograding_timeLimit', 3000);
-        $mform->addRule('assignsubmission_autograding_timeLimit', get_string('required'), 'required');
         $mform->hideIf(
             'assignsubmission_autograding_timeLimit',
             'assignsubmission_autograding_enabled',
@@ -137,7 +133,6 @@ class assign_submission_autograding extends assign_submission_plugin {
 
         $graders = $mform->addElement('select', 'assignsubmission_autograding_autograders', 'Autograders', $autograders);
         $graders->setMultiple(true);
-        $mform->addRule('assignsubmission_autograding_autograders', get_string('required'), 'required');
         $mform->hideIf(
             'assignsubmission_autograding_autograders',
             'assignsubmission_autograding_enabled',
@@ -155,82 +150,91 @@ class assign_submission_autograding extends assign_submission_plugin {
         $config = get_config('local_integrate_autograding_system');
         global $DB;
 
-        $files_data = $DB->get_records('files', array('itemid' => $data->assignsubmission_autograding_codereference));
+        if (
+            isset($data->assignsubmission_autograding_codereference) &&
+            isset($data->assignsubmission_autograding_gradingMethod) &&
+            isset($data->assignsubmission_autograding_gradingPriority) &&
+            isset($data->assignsubmission_autograding_timeLimit) &&
+            isset($data->assignsubmission_autograding_autograders) &&
+            count($data->assignsubmission_autograding_autograders) > 0
+        ) { // only valid if all autograding data is set
+            $files_data = $DB->get_records('files', array('itemid' => $data->assignsubmission_autograding_codereference));
 
-        // create gitlab repository
-        $curl = new curl();
-        $name = str_replace(' ', '-', $data->name);
+            // create gitlab repository
+            $curl = new curl();
+            $name = str_replace(' ', '-', $data->name);
 
-        $url = get_string(
-            'urltemplate',
-            'local_integrate_autograding_system',
-            [
-                'url' => $config->bridge_service_url,
-                'endpoint' => '/gitlab/createRepository'
-            ]
-        );
-        $payload = array(
-            'courseId' => $this->assignment->get_instance()->course,
-            'assignmentId' => $this->assignment->get_instance()->id,
-            'name' => $name,
-            'gradingMethod' => $data->assignsubmission_autograding_gradingMethod,
-            'gradingPriority' => $data->assignsubmission_autograding_gradingPriority,
-            'timeLimit' => $data->assignsubmission_autograding_timeLimit,
-            'dueDate' => $data->duedate,
-            'autograders' => $data->assignsubmission_autograding_autograders,
-        );
-        $payload_string = json_encode($payload);
+            $url = get_string(
+                'urltemplate',
+                'local_integrate_autograding_system',
+                [
+                    'url' => $config->bridge_service_url,
+                    'endpoint' => '/gitlab/createRepository'
+                ]
+            );
+            $payload = array(
+                'courseId' => $this->assignment->get_instance()->course,
+                'assignmentId' => $this->assignment->get_instance()->id,
+                'name' => $name,
+                'gradingMethod' => $data->assignsubmission_autograding_gradingMethod,
+                'gradingPriority' => $data->assignsubmission_autograding_gradingPriority,
+                'timeLimit' => $data->assignsubmission_autograding_timeLimit,
+                'dueDate' => $data->duedate,
+                'autograders' => $data->assignsubmission_autograding_autograders,
+            );
+            $payload_string = json_encode($payload);
 
-        $curl->setHeader(array('Content-type: application/json'));
-        $curl->setHeader(array('Accept: application/json', 'Expect:'));
-        $response_json = json_decode($curl->post($url, $payload_string));
+            $curl->setHeader(array('Content-type: application/json'));
+            $curl->setHeader(array('Accept: application/json', 'Expect:'));
+            $response_json = json_decode($curl->post($url, $payload_string));
 
-        if ($response_json->success) {
-            // save code reference
-            foreach ($files_data as $file_data) {
-                if ($file_data->filename !== '.') {
-                    $fs = get_file_storage();
-                    $file = $fs->get_file_by_hash($file_data->pathnamehash);
-                    $curl = new curl();
-
-                    $prop = explode('.', $file_data->filename);
-                    $filename = $prop[0];
-                    $ex = '';
-                    if (count($prop) > 1) {
-                        $ex = $prop[1];
+            if ($response_json->success) {
+                // save code reference
+                foreach ($files_data as $file_data) {
+                    if ($file_data->filename !== '.') {
+                        $fs = get_file_storage();
+                        $file = $fs->get_file_by_hash($file_data->pathnamehash);
+                        $curl = new curl();
+    
+                        $prop = explode('.', $file_data->filename);
+                        $filename = $prop[0];
+                        $ex = '';
+                        if (count($prop) > 1) {
+                            $ex = $prop[1];
+                        }
+    
+                        $url = get_string(
+                            'urltemplate',
+                            'local_integrate_autograding_system',
+                            [
+                                'url' => $config->bridge_service_url,
+                                'endpoint' => '/moodle/saveReference'
+                            ]
+                        );
+                        $payload = array(
+                            'courseId' => $this->assignment->get_instance()->course,
+                            'assignmentId' => $this->assignment->get_instance()->id,
+                            'contentHash' => $file_data->contenthash,
+                            'extension' => $ex,
+                            'filename' => $filename,
+                            'rawContent' => base64_encode($file->get_content()),
+                        );
+                        $payload_string = json_encode($payload);
+                        $curl->setHeader(array('Content-type: application/json'));
+                        $curl->setHeader(array('Accept: application/json', 'Expect:'));
+                        $curl->post($url, $payload_string);
+    
+                        $file->delete();    // remove from moodle file system
                     }
-
-                    $url = get_string(
-                        'urltemplate',
-                        'local_integrate_autograding_system',
-                        [
-                            'url' => $config->bridge_service_url,
-                            'endpoint' => '/moodle/saveReference'
-                        ]
-                    );
-                    $payload = array(
-                        'courseId' => $this->assignment->get_instance()->course,
-                        'assignmentId' => $this->assignment->get_instance()->id,
-                        'contentHash' => $file_data->contenthash,
-                        'extension' => $ex,
-                        'filename' => $filename,
-                        'rawContent' => base64_encode($file->get_content()),
-                    );
-                    $payload_string = json_encode($payload);
-                    $curl->setHeader(array('Content-type: application/json'));
-                    $curl->setHeader(array('Accept: application/json', 'Expect:'));
-                    $curl->post($url, $payload_string);
-
-                    $file->delete();    // remove from moodle file system
                 }
             }
+    
+            unset($data->assignsubmission_autograding_codereference);
+            unset($data->assignsubmission_autograding_gradingMethod);
+            unset($data->assignsubmission_autograding_gradingPriority);
+            unset($data->assignsubmission_autograding_timeLimit);
+            unset($data->assignsubmission_autograding_autograders);
         }
-
-        unset($data->assignsubmission_autograding_codereference);
-        unset($data->assignsubmission_autograding_gradingMethod);
-        unset($data->assignsubmission_autograding_gradingPriority);
-        unset($data->assignsubmission_autograding_timeLimit);
-        unset($data->assignsubmission_autograding_autograders);
 
         return true;
     }
