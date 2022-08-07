@@ -156,10 +156,12 @@ class assign_submission_autograding extends assign_submission_plugin {
             isset($data->assignsubmission_autograding_gradingPriority) &&
             isset($data->assignsubmission_autograding_timeLimit) &&
             isset($data->assignsubmission_autograding_autograders) &&
-            count($data->assignsubmission_autograding_autograders) > 0 &&
-            count($data->assignsubmission_autograding_codereference) > 0
+            count($data->assignsubmission_autograding_autograders) > 0
         ) { // only valid if all autograding data is set
             $files_data = $DB->get_records('files', array('itemid' => $data->assignsubmission_autograding_codereference));
+            if (count($files_data) == 0) {  // invalid no reference
+                return true;
+            }
 
             // create gitlab repository
             $curl = new curl();
@@ -196,14 +198,14 @@ class assign_submission_autograding extends assign_submission_plugin {
                         $fs = get_file_storage();
                         $file = $fs->get_file_by_hash($file_data->pathnamehash);
                         $curl = new curl();
-    
+
                         $prop = explode('.', $file_data->filename);
                         $filename = $prop[0];
                         $ex = '';
                         if (count($prop) > 1) {
                             $ex = $prop[1];
                         }
-    
+
                         $url = get_string(
                             'urltemplate',
                             'local_integrate_autograding_system',
@@ -224,12 +226,12 @@ class assign_submission_autograding extends assign_submission_plugin {
                         $curl->setHeader(array('Content-type: application/json'));
                         $curl->setHeader(array('Accept: application/json', 'Expect:'));
                         $curl->post($url, $payload_string);
-    
+
                         $file->delete();    // remove from moodle file system
                     }
                 }
             }
-    
+
             unset($data->assignsubmission_autograding_codereference);
             unset($data->assignsubmission_autograding_gradingMethod);
             unset($data->assignsubmission_autograding_gradingPriority);
